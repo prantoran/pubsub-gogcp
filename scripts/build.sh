@@ -5,15 +5,10 @@ then
     export GOBIN="$GOPATH/bin"
 fi
 
-export PROPATH=`pwd`
-export GOOGLE_APPLICATION_CREDENTIALS="`pwd`/jsonapikey.json"
+export GOOGLE_APPLICATION_CREDENTIALS="`pwd`/jsonapike.json"
+
 echo $GOOGLE_APPLICATION_CREDENTIALS
 # export GOOGLE_CLOUD_PROJECT="pubsub0-1436e696fb62"
 export GOOGLE_CLOUD_PROJECT="projectid"
 
-
-cd cmd/pub
-go install ./... && $GOBIN/pub
-
-cd $PROPATH
 

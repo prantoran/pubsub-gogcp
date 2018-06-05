@@ -10,9 +10,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/api/iterator"
 
@@ -20,6 +23,11 @@ import (
 )
 
 func main() {
+	pflag.String("subscriber", "example-subscription", "name of subscriber")
+
+	pflag.Parse()
+	viper.BindPFlags(pflag.CommandLine)
+
 	ctx := context.Background()
 	proj := os.Getenv("GOOGLE_CLOUD_PROJECT")
 	if proj == "" {
@@ -31,25 +39,37 @@ func main() {
 		log.Fatalf("Could not create pubsub Client: %v", err)
 	}
 
+	sub := viper.GetString("subscriber") // retrieve values from viper instead of pflag
+	subExists := false
+
 	// Print all the subscriptions in the project.
 	fmt.Println("Listing all subscriptions from the project:")
 	subs, err := list(client)
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, sub := range subs {
-		fmt.Println(sub)
+	for _, s := range subs {
+		fmt.Println("sub:", s, " s.string():", s.String())
+		sa := strings.Split(s.String(), "/")
+		salen := len(sa)
+		if sa[salen-1] == sub {
+			subExists = true
+			break
+		}
 	}
+	fmt.Println("saexists:", subExists)
 
 	t := createTopicIfNotExists(client)
 
-	// const sub = "example-subscription"
-	const sub = "example-subscription"
-
 	// Create a new subscription.
-	if err := create(client, sub, t); err != nil {
-		log.Fatal(err)
+	if !subExists {
+		if err := create(client, sub, t); err != nil {
+			log.Fatal(err)
+		}
 	}
+
+	// const sub = "example-subscription"
+	// const sub = "example-subscription"
 
 	// Pull messages via the subscription.
 	if err := pullMsgs(client, sub, t, false); err != nil {
